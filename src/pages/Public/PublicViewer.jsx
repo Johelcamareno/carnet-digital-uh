@@ -34,7 +34,20 @@ const PublicViewer = () => {
                     return;
                 }
 
-                const response = await fetch(`${N8N_WEBHOOK_URL}?token=${token}`);
+                // Lógica Inteligente de URL:
+                // En Producción (Vercel): Usar el Proxy local (/api/validate) para evitar error de SSL Mixed Content
+                // En Desarrollo (Localhost): Usar directo n8n (o el proxy si vercel dev está corriendo)
+                let fetchUrl;
+                if (import.meta.env.PROD) {
+                    fetchUrl = `/api/validate?token=${token}`;
+                } else {
+                    // Fallback directo para localhost (aquí HTTP sí funciona)
+                    fetchUrl = `${N8N_WEBHOOK_URL}?token=${token}`;
+                }
+
+                console.log("Fetching student data from:", fetchUrl);
+
+                const response = await fetch(fetchUrl);
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
