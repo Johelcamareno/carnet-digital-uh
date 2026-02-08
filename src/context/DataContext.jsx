@@ -15,13 +15,30 @@ export const DataProvider = ({ children }) => {
         localStorage.setItem('students', JSON.stringify(students));
     }, [students]);
 
-    const addStudent = (newStudent) => {
-        const studentWithStatus = {
-            ...newStudent,
-            photoStatus: 'approved', // Default for admin created
-            lastAttendance: null
-        };
-        setStudents((prev) => [...prev, studentWithStatus]);
+    import { n8nService } from '../services/n8nService';
+
+    // ... (imports)
+
+    const addStudent = async (newStudent) => {
+        try {
+            const studentWithStatus = {
+                ...newStudent,
+                photoStatus: 'approved',
+                lastAttendance: null
+            };
+
+            // 1. Guardar en Backend (Notion/n8n)
+            console.log("Enviando a n8n:", studentWithStatus);
+            await n8nService.createStudent(studentWithStatus);
+
+            // 2. Actualizar estado local (Optimistic UI o tras éxito)
+            setStudents((prev) => [...prev, studentWithStatus]);
+            return { success: true };
+        } catch (error) {
+            console.error("Error al guardar en Notion:", error);
+            alert("Error al guardar en la base de datos. Revisa la conexión con n8n.");
+            return { success: false, error };
+        }
     };
 
     const addStudentsBulk = (newStudents) => {
